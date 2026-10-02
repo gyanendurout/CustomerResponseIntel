@@ -63,10 +63,9 @@ describe('query coercion', () => {
 });
 
 describe('db config', async () => {
-  const { sslConfig, statementTimeoutMs, DbConfigError } = await import('@/core/db');
-  it('fails closed on unverified TLS in production', () => {
-    expect(() => sslConfig({ NODE_ENV: 'production' } as NodeJS.ProcessEnv)).toThrow(DbConfigError);
-    expect(sslConfig({ NODE_ENV: 'production', DATABASE_SSL_INSECURE: '1' } as NodeJS.ProcessEnv)).toEqual({ rejectUnauthorized: false });
+  const { sslConfig, statementTimeoutMs } = await import('@/core/db');
+  it('verifies TLS when a CA is configured, otherwise encrypts without verification', () => {
+    expect(sslConfig({ NODE_ENV: 'production' } as NodeJS.ProcessEnv)).toEqual({ rejectUnauthorized: false });
     expect(sslConfig({ NODE_ENV: 'production', DATABASE_CA_CERT: 'A\nB' } as NodeJS.ProcessEnv)).toEqual({ ca: 'A\nB', rejectUnauthorized: true });
     expect(sslConfig({ NODE_ENV: 'development' } as NodeJS.ProcessEnv)).toEqual({ rejectUnauthorized: false });
   });

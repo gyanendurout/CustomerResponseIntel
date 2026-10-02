@@ -111,8 +111,8 @@ To spot problems early, the `data_health` capability shows how fresh each channe
   - No usernames, handles, profile links or emails.
   - Post and video links are rewritten into forms that don't contain the account's handle.
 - **Secrets stay out of the code.** They live only in environment variables, and `.env` is git-ignored.
-- **The database connection is encrypted in production.** It also checks the server's certificate unless that check
-  is explicitly switched off.
+- **The database connection is always encrypted.** The server certificate is not verified yet (decision D29);
+  adding `DATABASE_CA_CERT` in Vercel turns verification on with no code change.
 
 ## 6. Where things are
 
@@ -132,16 +132,10 @@ needs `DATABASE_URL`.
 
 ## 7. Still to do (each needs the owner's go-ahead)
 
-Done: service key rotated, migrations applied, `DATABASE_URL` set, real-data checks passing.
+Done: service key rotated, migrations applied, `DATABASE_URL` set, real-data checks passing, keys made, code on
+GitHub (gyanendurout/CustomerResponseIntel, public), deployed to https://customer-response-intel.vercel.app.
 
-1. **Make keys.** Run `node scripts/hash-key.mjs` once for the dashboard (`API_KEYS`) and once per Claude device
-   (`MCP_TOKENS`). Keep the keys in a password manager; only the `label:sha256` values go into settings.
-2. **Get the CA certificate.** Supabase → Database → Settings → SSL → download. Put its contents in
-   `DATABASE_CA_CERT`, with line breaks written as `
-`.
-3. **Deploy to Vercel.** Deploy a preview first, then promote it. The region is pinned to `iad1`, next to Supabase
-   us-east-1. Set `DATABASE_URL`, `DATABASE_CA_CERT`, `API_KEYS`, `MCP_TOKENS` and `ALLOWED_ORIGIN` (the dashboard's
-   web address, if there is one).
-4. **Connect Claude Code or Claude Desktop** with a token (`docs/CONNECT_CLAUDE.md`).
-5. **Confirm the TikTok link format** (currently the `tiktok.com/embed/v2/<id>` form).
-6. **Decide whether to set up git** and make the first commit.
+1. **Connect Claude Code or Claude Desktop** with the token `CLAUDE_MCP_TOKEN` from `.env` (`docs/CONNECT_CLAUDE.md`).
+2. **Optional: verify the database certificate.** Add `DATABASE_CA_CERT` (from `.env`) in Vercel and redeploy.
+3. **TikTok link format:** on hold (currently the `tiktok.com/embed/v2/<id>` form).
+4. **Optional Supabase settings:** turn on "Enforce SSL"; turn off "Automatically expose new tables".

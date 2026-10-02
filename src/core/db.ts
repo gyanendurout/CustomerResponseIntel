@@ -40,12 +40,12 @@ export function statementTimeoutMs(raw = process.env.DB_STATEMENT_TIMEOUT_MS): n
   return Number.isInteger(n) && n > 0 ? Math.min(n, MAX_STATEMENT_TIMEOUT_MS) : DEFAULT_STATEMENT_TIMEOUT_MS;
 }
 
-/** TLS: verified with DATABASE_CA_CERT; unverified only outside production or with explicit DATABASE_SSL_INSECURE=1. */
+/**
+ * TLS is always on. With DATABASE_CA_CERT the server certificate is also verified; without it the connection is
+ * encrypted but the certificate is not checked (owner's choice, decision D29). Add the CA later to turn verification on.
+ */
 export function sslConfig(env: NodeJS.ProcessEnv = process.env): { ca: string; rejectUnauthorized: true } | { rejectUnauthorized: false } {
   if (env.DATABASE_CA_CERT) return { ca: env.DATABASE_CA_CERT.replace(/\\n/g, '\n'), rejectUnauthorized: true };
-  if (env.NODE_ENV === 'production' && env.DATABASE_SSL_INSECURE !== '1') {
-    throw new DbConfigError('DATABASE_CA_CERT is required in production (or set DATABASE_SSL_INSECURE=1 to accept unverified TLS).');
-  }
   return { rejectUnauthorized: false };
 }
 
