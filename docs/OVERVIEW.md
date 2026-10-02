@@ -7,7 +7,9 @@ Status on 2026-10-02 (updated). Secrets and exact connection details are in `PRI
   read-only, all 17 views exist, totals match an independent recount (51,762 items, 53,323 signals), and all 15 tools
   work with no usernames, handles or emails in their output.
 - Speed (decision D28): 0–3.1 s of database time per tool. No pre-built copy, so new data shows up instantly.
-- Deployed: https://customer-response-intel.vercel.app. All 15 REST routes and MCP tools checked live; no PII found.
+- Deployed: https://customer-response-intel.vercel.app. 23 tools (15 original + 8 platform tools: audience_growth,
+  content_performance, top_content, posting_cadence, video_insights, reddit_insights, product_mentions,
+  athlete_mentions), all checked live; no PII found. Platform plan: `docs/plans/2026-10-02-platform-pages-expansion.md`.
 
 ---
 

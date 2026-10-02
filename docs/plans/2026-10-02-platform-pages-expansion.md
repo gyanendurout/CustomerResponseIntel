@@ -1,6 +1,7 @@
 # Platform pages expansion: plan
 
-Status: built and tested locally (283 tests). Waiting for the owner to apply 040–046 and 091; then real-data checks and deploy.
+Status (2026-10-02): LIVE. Views 040–046 + 091 applied; every view reconciles exactly with independent counts from the raw
+tables (`node scripts/check-platform.mjs`); real-data suite passes; all 8 tools verified on the live connector, no PII.
 
 Goal: the Community Intel API and MCP can answer everything the dashboard pages `/v2/instagram`, `/v2/youtube`,
 `/v2/twitter`, `/v2/tiktok` and `/v2/reddit` show, computed correctly in the database instead of in the browser.
