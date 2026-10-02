@@ -45,7 +45,11 @@ describe('audience_growth', () => {
     expect(find('x', 'JOOLA')).toMatchObject({ followers: 300, change_vs_previous_week: 10, change_vs_previous_week_pct: 3.4 });
     expect(find('youtube', 'JOOLA')).toMatchObject({ followers: 520, change_vs_previous_week: 20, total_views: 12000, content_theme: null });
     expect(find('tiktok', 'JOOLA')).toMatchObject({ followers: 5000, total_hearts: 90000, account_url: 'https://www.tiktok.com/@joolapickleball' });
-    expect(r.data.series.find(s => s.platform === 'instagram' && s.brand === 'JOOLA' && s.week === '2026-09-14')).toMatchObject({ followers: 0, flag: 'suspect' });
+    expect(r.data.weeks).toEqual(['2026-08-24', '2026-08-31', '2026-09-07', '2026-09-14', '2026-09-21']);
+    expect(r.data.series.find(s => s.platform === 'instagram' && s.brand === 'JOOLA')).toEqual({
+      platform: 'instagram', brand: 'JOOLA', followers: [1000, 1010, 1030, 0, 1060], flags: ['ok', 'ok', 'ok', 'suspect', 'ok'],
+    });
+    expect(r.data.series.find(s => s.platform === 'x' && s.brand === 'JOOLA')!.flags).toEqual(['not_tracked', 'not_tracked', 'not_tracked', 'ok', 'ok']);
     expect(r.data.no_data).toHaveLength(6);
     expect(r.data.no_data.every(n => !n.has_account)).toBe(true);
   });
@@ -93,7 +97,8 @@ describe('posting_cadence', () => {
     const r = await call(postingCadence, { from: '2026-09-01', to: '2026-09-28', platforms: ['instagram'] });
     const joola = r.data.summary.find(s => s.brand === 'JOOLA')!;
     expect(joola).toMatchObject({ posts: 3, active_days: 3, last_period_posts: 0, previous_period_posts: 2, busiest_weekday: 'Mon' });
-    expect(r.data.series.filter(s => s.brand === 'JOOLA').map(s => s.posts)).toEqual([0, 0, 1, 2, 0]);
+    expect(r.data.periods).toEqual(['2026-08-31', '2026-09-07', '2026-09-14', '2026-09-21', '2026-09-28']);
+    expect(r.data.series.find(s => s.brand === 'JOOLA')).toMatchObject({ posts: [0, 0, 1, 2, 0], by_weekday: [1, 0, 1, 0, 0, 0, 1] });
     expect(r.data.summary.find(s => s.brand === 'Selkirk Sport')).toMatchObject({ posts: 1 });
     const tt = await call(postingCadence, { from: '2026-09-21', to: '2026-09-28', platforms: ['tiktok'] });
     expect(tt.data.summary.map(s => `${s.brand}:${s.posts}`).sort()).toEqual(['CRBN Pickleball:0', 'JOOLA:0']);

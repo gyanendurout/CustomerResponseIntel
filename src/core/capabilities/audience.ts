@@ -34,9 +34,12 @@ const output = z.object({
     missing_weeks: z.number(),
     suspect_weeks: z.number(),
   })),
+  // Compact layout: weeks are listed once; each series row holds one value and one flag per week.
+  // flag: ok | suspect (glitch, excluded) | missing (no snapshot after tracking began) | not_tracked (before the first snapshot)
+  weeks: z.array(z.string()),
   series: z.array(z.object({
-    platform: zPlatform, brand: z.string(), week: z.string(), followers: z.number().nullable(),
-    flag: z.enum(['ok', 'suspect', 'missing']),
+    platform: zPlatform, brand: z.string(), followers: z.array(z.number().nullable()),
+    flags: z.array(z.enum(['ok', 'suspect', 'missing', 'not_tracked'])),
   })),
   no_data: z.array(z.object({ platform: zPlatform, brand: z.string(), has_account: z.boolean() })),
 });
@@ -60,7 +63,8 @@ export const audienceGrowth = defineCapability({
     'and excluded from changes, never interpolated. no_data lists brand/platform pairs with no snapshots in range.',
     'Use for "who is growing fastest / how many followers"; use content_performance for post engagement.',
     'Output: data = {accounts:[{platform, brand, account_handle, account_url, latest_week, followers, change_vs_previous_week,',
-    'change_vs_previous_week_pct, change_in_range, change_in_range_pct, ...}], series:[{platform, brand, week, followers, flag}], no_data:[...]}.',
+    'change_vs_previous_week_pct, change_in_range, change_in_range_pct, ...}], weeks:[YYYY-MM-DD…],',
+    'series:[{platform, brand, followers:[one per week], flags:[ok|suspect|missing|not_tracked per week]}], no_data:[...]}.',
     'Example: "Which brand gained the most Instagram followers this quarter?"',
   ].join(' '),
   input: z.object(platformFilterShape),
@@ -95,6 +99,8 @@ export const audienceGrowth = defineCapability({
     }
 
     const out: z.infer<typeof output>['accounts'] = [];
+    const weeks: string[] = [];
+    for (let t = fromWeek.getTime(); t <= lastWeek.getTime(); t += WEEK_MS) weeks.push(isoDay(new Date(t)));
     const series: z.infer<typeof output>['series'] = [];
     let suspectTotal = 0;
     let missingTotal = 0;
@@ -102,21 +108,29 @@ export const audienceGrowth = defineCapability({
       const [platform, brandId] = key.split('|') as [Platform, string];
       const brand = brandName(brandId);
       const byWeek = new Map(list.map(r => [r.week, r]));
-      const firstWeek = new Date(list[0]!.week + 'T00:00:00Z');
+      const firstWeek = list[0]!.week;
       const good: Array<{ week: string; row: WeekRow; followers: number }> = [];
+      const values: Array<number | null> = [];
+      const flags: z.infer<typeof output>['series'][number]['flags'] = [];
       let missing = 0;
       let suspect = 0;
-      for (let t = firstWeek.getTime(); t <= lastWeek.getTime(); t += WEEK_MS) {
-        const week = isoDay(new Date(t));
+      for (const week of weeks) {
         const row = byWeek.get(week);
-        if (!row) { missing += 1; series.push({ platform, brand, week, followers: null, flag: 'missing' }); continue; }
+        if (!row) {
+          const tracked = week > firstWeek;
+          if (tracked) missing += 1;
+          values.push(null); flags.push(tracked ? 'missing' : 'not_tracked');
+          continue;
+        }
         const followers = numOrNull(row.followers);
         const prevGood = good.at(-1);
         const isSuspect = followers == null || followers <= 0 || (prevGood !== undefined && followers < prevGood.followers * (1 - SUSPECT_DROP));
-        if (isSuspect) { suspect += 1; series.push({ platform, brand, week, followers, flag: 'suspect' }); continue; }
+        values.push(followers);
+        if (isSuspect) { suspect += 1; flags.push('suspect'); continue; }
         good.push({ week, row, followers: followers! });
-        series.push({ platform, brand, week, followers, flag: 'ok' });
+        flags.push('ok');
       }
+      series.push({ platform, brand, followers: values, flags });
       suspectTotal += suspect;
       missingTotal += missing;
       const latest = good.at(-1);
@@ -159,7 +173,7 @@ export const audienceGrowth = defineCapability({
     if (missingTotal) notes.push(`${fmt(missingTotal)} week${missingTotal === 1 ? ' has' : 's have'} no snapshot (flag "missing"); week-over-week change is only given for consecutive weeks.`);
     if (noData.length) notes.push(`${fmt(noData.length)} brand/platform pair${noData.length === 1 ? ' has' : 's have'} no snapshots in this range (see data.no_data; has_account=false means the brand has no tracked account there).`);
     return {
-      data: { accounts: out, series, no_data: noData },
+      data: { accounts: out, weeks, series, no_data: noData },
       meta: meta({
         filters: f.applied, rows_counted: rows.length, excluded: NO_EXCLUSIONS, notes,
         units: { followers: 'followers (YouTube: subscribers)', change_vs_previous_week_pct: '% vs previous ISO week' },

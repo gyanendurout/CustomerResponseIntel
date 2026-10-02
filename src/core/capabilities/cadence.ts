@@ -20,8 +20,10 @@ const output = z.object({
     last_period_posts: z.number(),
     previous_period_posts: z.number(),
   })),
-  series: z.array(z.object({ platform: z.enum(PLATFORMS), brand: z.string(), period: z.string(), posts: z.number() })),
-  by_weekday: z.array(z.object({ platform: z.enum(PLATFORMS), brand: z.string(), weekday: z.enum(WEEKDAYS), posts: z.number() })),
+  // Compact layout: periods and weekdays are listed once; each series row holds one number per period / weekday.
+  periods: z.array(z.string()),
+  weekdays: z.array(z.enum(WEEKDAYS)),
+  series: z.array(z.object({ platform: z.enum(PLATFORMS), brand: z.string(), posts: z.array(z.number()), by_weekday: z.array(z.number()) })),
 });
 
 export const postingCadence = defineCapability({
@@ -34,7 +36,8 @@ export const postingCadence = defineCapability({
     'period. Brands with a tracked account but no posts in the range appear with 0 (silent), not missing.',
     'Use for "who posts most / is JOOLA posting less"; use content_performance for engagement.',
     'Output: data = {summary:[{platform, brand, posts, active_days, days_in_range, posts_per_week, busiest_weekday,',
-    'last_period_posts, previous_period_posts}], series:[{platform, brand, period, posts}], by_weekday:[{platform, brand, weekday, posts}]}.',
+    'last_period_posts, previous_period_posts}], periods:[YYYY-MM-DD…], weekdays:[Mon…Sun], series:[{platform, brand,',
+    'posts:[one count per period], by_weekday:[one count per weekday]}]}.',
     'Example: "How often did each brand post on Instagram over the last 4 weeks?"',
   ].join(' '),
   input: z.object({
@@ -77,15 +80,14 @@ export const postingCadence = defineCapability({
     const count = new Map(series.map(s => [`${s.platform}|${s.brand_id}|${s.period}`, s.n]));
 
     const outSeries: z.infer<typeof output>['series'] = [];
-    const outWeekdays: z.infer<typeof output>['by_weekday'] = [];
     const summary: z.infer<typeof output>['summary'] = [];
     for (const key of [...pairs].sort()) {
       const [platform, brandId] = key.split('|') as [Platform, string];
       const brand = names.get(brandId) ?? brandId;
       const perPeriod = periods.map(p => count.get(`${key}|${p}`) ?? 0);
-      periods.forEach((p, i) => outSeries.push({ platform, brand, period: p, posts: perPeriod[i]! }));
+
       const wd = WEEKDAYS.map((w, i) => ({ weekday: w, posts: weekdays.find(x => `${x.platform}|${x.brand_id}` === key && x.dow === i + 1)?.n ?? 0 }));
-      wd.forEach(w => outWeekdays.push({ platform, brand, ...w }));
+      outSeries.push({ platform, brand, posts: perPeriod, by_weekday: wd.map(w => w.posts) });
       const t = totals.find(x => `${x.platform}|${x.brand_id}` === key);
       const busiest = wd.reduce((m, w) => (w.posts > m.posts ? w : m), { weekday: WEEKDAYS[0], posts: 0 } as { weekday: (typeof WEEKDAYS)[number]; posts: number });
       summary.push({
@@ -104,7 +106,7 @@ export const postingCadence = defineCapability({
     const silent = summary.filter(s => s.posts === 0).length;
     if (silent) notes.push(`${fmt(silent)} tracked brand account${silent === 1 ? '' : 's'} posted nothing in this range.`);
     return {
-      data: { summary, series: outSeries, by_weekday: outWeekdays },
+      data: { summary, periods, weekdays: [...WEEKDAYS], series: outSeries },
       meta: meta({
         filters: f.applied, rows_counted: summary.reduce((s, x) => s + x.posts, 0),
         excluded: { undated: 0, unbranded: 0, unlabelled_sentiment: 0 }, notes, granularity: f.granularity,
@@ -114,7 +116,7 @@ export const postingCadence = defineCapability({
   summarise: r => {
     if (!r.data.summary.length) return 'No brand accounts or posts match these filters.';
     const g = (r.meta.granularity as 'day' | 'week' | 'month') ?? 'week';
-    const p = r.data.series.at(-1)?.period;
+    const p = r.data.periods.at(-1);
     return [...r.data.summary].sort((a, b) => b.posts - a.posts).slice(0, 3).map(s =>
       `${s.brand} ${PLATFORM_LABEL[s.platform]}: ${fmt(s.posts)} posts (${s.posts_per_week ?? 0}/week)` +
       (p ? `, ${fmt(s.last_period_posts)} in ${periodLabel(p, g)}` : '')).join('; ') + '.';
