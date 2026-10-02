@@ -22,4 +22,13 @@ describe('MCP token auth', () => {
   it('fails closed when no tokens are configured', () => {
     expect(verifyMcpRequest(req('Bearer tok-a'))).toBeUndefined();
   });
+  it('accepts the token as the last URL segment (/api/mcp/<token>)', () => {
+    process.env.MCP_TOKENS = `laptop:${sha('tok-a')}`;
+    const at = (path: string) => new Request(`http://localhost${path}`);
+    expect(verifyMcpRequest(at('/api/mcp/tok-a'))?.clientId).toBe('laptop');
+    expect(verifyMcpRequest(at('/api/mcp/tok-a/'))?.clientId).toBe('laptop');
+    expect(verifyMcpRequest(at('/api/mcp/wrong'))).toBeUndefined();
+    expect(verifyMcpRequest(at('/api/mcp/%E0%A4%A'))).toBeUndefined();
+    expect(verifyMcpRequest(at('/api/mcp'))).toBeUndefined();
+  });
 });

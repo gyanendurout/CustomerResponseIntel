@@ -1,12 +1,14 @@
 # Connect Claude to Community Intel
 
-The MCP endpoint is `https://<your-app>.vercel.app/api/mcp`. It accepts a secret token sent as
-`Authorization: Bearer <token>`. Tokens live in the `MCP_TOKENS` environment variable as `label:sha256` pairs, so
-each person or device gets its own token and any one can be revoked by deleting its entry.
+The MCP endpoint is `https://<your-app>.vercel.app/api/mcp`. It accepts a secret token in one of two ways:
 
-> **Limitation:** custom connectors added in the claude.ai website or mobile app only support OAuth (or no auth), so
-> they cannot send this token. Use **Claude Code** or **Claude Desktop** (below). OAuth can be added back later if
-> claude.ai web access is needed.
+* as a header, `Authorization: Bearer <token>` (Claude Code, Claude Desktop config, MCP Inspector);
+* inside the URL, `https://<your-app>.vercel.app/api/mcp/<token>`, for the **Add custom connector** dialog in the
+  Claude apps, which takes only a URL (section 3c).
+
+Tokens live in the `MCP_TOKENS` environment variable as `label:sha256` pairs, so each person or device gets its own
+token and any one can be revoked by deleting its entry. A token used inside a URL appears in Vercel's request logs;
+give it its own label so it can be revoked without affecting the others.
 
 Every step that changes Vercel settings is yours to perform, after reading it.
 
@@ -54,6 +56,16 @@ Settings → Developer → Edit Config, then add (needs Node installed):
 ```
 
 Restart Claude Desktop; the tools appear under the tools menu.
+
+## 3c. Claude app or claude.ai: "Add custom connector"
+
+Settings → Connectors → **Add custom connector**:
+
+* **Name:** `Community Intel`
+* **MCP server URL:** `https://<your-app>.vercel.app/api/mcp/<token>`
+
+Leave everything else empty and click **Continue**. The connector then appears in the chat's tools menu. Treat the
+full URL like a password.
 
 ## Revoking a token
 

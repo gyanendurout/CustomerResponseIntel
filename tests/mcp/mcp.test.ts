@@ -43,6 +43,12 @@ describe('MCP auth', () => {
     expect(r.status).toBe(401);
     expect(r.headers.get('www-authenticate')).toBe('Bearer');
   });
+  it('connects with the token in the URL and no header (custom connector dialog)', async () => {
+    const client = new Client({ name: 'vitest', version: '1.0.0' });
+    await client.connect(new StreamableHTTPClientTransport(new URL(`${URL_MCP}/${TOKEN}`), { fetch: inProcessFetch as never }));
+    expect((await client.listTools()).tools.length).toBe(CAPABILITIES.length);
+    await client.close();
+  });
   it('rejects a wrong token', async () => {
     await expect(connect('wrong')).rejects.toThrow();
   });
