@@ -44,6 +44,25 @@ describe('helpers', () => {
       intel.mask_pii(null) e`);
     expect(r[0]).toEqual({ a: 'thanks @user!', b: 'write to [email]', c: '@user hi', d: 'see [link] and [link] ok', e: null });
   });
+
+  it('masks Reddit user mentions (034) and leaves subreddits, paths and short tokens alone', async () => {
+    const r = await rows<{ a: string; b: string; c: string; d: string }>(`select
+      intel.mask_pii('/u/Example_Person1 on Authenticity Check') a,
+      intel.mask_pii('thanks u/some_user-2! and (U/Someone)') b,
+      intel.mask_pii('r/Pickleball, menu/items, u/ab') c,
+      intel.mask_pii('see https://www.reddit.com/u/someone/ ok') d`);
+    expect(r[0]).toEqual({
+      a: 'u/user on Authenticity Check',
+      b: 'thanks u/user! and (u/user)',
+      c: 'r/Pickleball, menu/items, u/ab',
+      d: 'see [link] ok',
+    });
+  });
+
+  it('a text search for a Reddit username finds nothing (masking happens before matching)', async () => {
+    const r = await rows<{ n: number }>(`select count(*)::int n from intel.v_signals where text ilike '%secret_redditor%'`);
+    expect(r[0]!.n).toBe(0);
+  });
 });
 
 describe('canonical_url', () => {
