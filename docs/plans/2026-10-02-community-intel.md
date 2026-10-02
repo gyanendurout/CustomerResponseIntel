@@ -75,6 +75,7 @@ Status: sections 1–3 were approved interactively on 2026-10-02. The owner appr
 | D29 | **Supersedes D25.** `DATABASE_CA_CERT` is optional: with it TLS is verified, without it the connection is encrypted but unverified (no startup error) | Require the CA in production | Owner choice: simpler deploy. Verification can be switched on later by adding the variable. |
 | D30 | MCP also accepts the token as the last URL segment (`/api/mcp/<token>`), checked against the same `MCP_TOKENS` hashes | Bring back OAuth | The Claude app's "Add custom connector" dialog takes only a URL. Trade-off: a URL token appears in Vercel request logs. |
 | D31 | MCP tool results also include the full `{data, meta}` as a JSON text block, next to the summary and `structuredContent` | Summary text only | The Claude apps pass only `content` to the model, so comment text and links never reached Claude. The MCP spec recommends this for structured results. |
+| D32 | Reddit user mentions (`u/name`, `/u/name`) are masked to `u/user` in application code (`maskUserMentions`, applied to every returned text field) | Only the SQL `mask_pii` (@handles, e-mails, links) | Found live: `/u/<name>` reached Claude. App-level masking ships without a migration; adding the same rule to `intel.mask_pii` would also stop text search from matching usernames (needs an approved migration). |
 
 ## 4. Design
 

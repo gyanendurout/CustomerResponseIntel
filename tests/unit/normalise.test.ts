@@ -1,8 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import {
   CHANNELS, CHANNEL_ALIASES, normaliseChannel, toSentiment5, rollupSentiment3, SENTIMENT_5, resolveGranularity,
-  resolveBrands, UnknownBrandError, defaultRange, levenshtein, sentimentFilterValues, type BrandRecord,
+  resolveBrands, UnknownBrandError, defaultRange, levenshtein, sentimentFilterValues, maskUserMentions, type BrandRecord,
 } from '@/core/normalise';
+
+describe('maskUserMentions', () => {
+  it('masks Reddit user mentions in every common form', () => {
+    expect(maskUserMentions('/u/Example_Person1 on Authenticity Check')).toBe('u/user on Authenticity Check');
+    expect(maskUserMentions('thanks u/some_user-2!')).toBe('thanks u/user!');
+    expect(maskUserMentions('(U/Someone) said')).toBe('(u/user) said');
+    expect(maskUserMentions('ping /u/abc and u/def_ghi')).toBe('ping u/user and u/user');
+  });
+  it('leaves ordinary text, paths and short tokens alone', () => {
+    expect(maskUserMentions('see menu/items and you/me')).toBe('see menu/items and you/me');
+    expect(maskUserMentions('r/Pickleball is great')).toBe('r/Pickleball is great');
+    expect(maskUserMentions('u/ab is too short')).toBe('u/ab is too short');
+    expect(maskUserMentions(null)).toBeNull();
+  });
+});
 
 const BRANDS: BrandRecord[] = [
   { brand_id: 'b-joola', name: 'JOOLA', slug: 'joola', is_joola: true, is_active: true },

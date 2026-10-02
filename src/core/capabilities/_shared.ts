@@ -2,12 +2,14 @@
 import { z } from 'zod';
 import type { Ctx } from '../context';
 import { countExclusions, exclusionNotes, resolveFilters, type CommonFilterInput, type Filters, type Exclusions } from '../filters';
-import { CHANNELS, SENTIMENT_3, SENTIMENT_5 } from '../normalise';
+import { CHANNELS, SENTIMENT_3, SENTIMENT_5, maskUserMentions } from '../normalise';
 import { isoText, run, sql } from '../sql';
 
 export const TEXT_LIMIT = 500;
 
-export function truncate(text: string | null, limit = TEXT_LIMIT): { text: string | null; text_truncated: boolean } {
+/** Every text field leaves through here: masks Reddit user mentions, then shortens to `limit` characters. */
+export function truncate(raw: string | null, limit = TEXT_LIMIT): { text: string | null; text_truncated: boolean } {
+  const text = maskUserMentions(raw);
   if (text == null) return { text: null, text_truncated: false };
   if (text.length <= limit) return { text, text_truncated: false };
   return { text: text.slice(0, limit - 1).trimEnd() + '…', text_truncated: true };

@@ -67,7 +67,7 @@ export async function seed(pg: PGlite): Promise<void> {
       ('${ID.rc1}', null, 't1_a', null, 'u1', 'this one is mine', 7, '2026-09-22T00:00:00Z', '2026-09-28T07:57:00Z', 'negative'),
       ('${ID.rc2}', null, 't1_b', null, 'u2', 'Switched to an SLK paddle', 1, '2026-09-23T00:00:00Z', '2026-09-28T07:57:00Z', 'very_positive'),
       ('${ID.rc3}', null, 't1_c', null, 'u3', 'ahead of slkx things', 0, '2026-09-24T00:00:00Z', '2026-09-28T07:57:00Z', null),
-      ('${ID.rc4}', '${ID.rm2}', 't1_d', '${B.crbn}', 'u4', 'agree', 2, '2026-09-25T00:00:00Z', '2026-09-28T07:57:00Z', 'neutral');
+      ('${ID.rc4}', '${ID.rm2}', 't1_d', '${B.crbn}', 'u4', 'agree with /u/secret_redditor', 2, '2026-09-25T00:00:00Z', '2026-09-28T07:57:00Z', 'neutral');
 
     insert into public.tiktok_videos (id, brand_id, handle, video_url, text, like_count, posted_at, created_at, sentiment_label) values
       ('${ID.ttVideo}', '${B.joola}', 'tt_handle', 'https://www.tiktok.com/@tt_handle/video/7301', 'new paddle drop', 100, '2026-09-05T00:00:00Z', '2026-09-28T07:34:00Z', 'positive');

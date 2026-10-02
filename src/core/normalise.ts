@@ -51,6 +51,15 @@ export function sentimentFilterValues(values: readonly SentimentFilterValue[] | 
   return [...out];
 }
 
+// Reddit user mentions ("u/name", "/u/name"). The database masks @handles, e-mails and links (intel.mask_pii); this
+// catches Reddit's own mention style in application code, so it applies to every text field the API returns.
+const REDDIT_USER = /(^|[^A-Za-z0-9_/])\/?u\/[A-Za-z0-9_-]{3,20}(?![A-Za-z0-9_-])/gi;
+
+/** Replaces Reddit user mentions with "u/user". Pure; null stays null. */
+export function maskUserMentions(text: string | null): string | null {
+  return text == null ? null : text.replace(REDDIT_USER, '$1u/user');
+}
+
 export const GRANULARITIES = ['day', 'week', 'month'] as const;
 export type Granularity = (typeof GRANULARITIES)[number];
 const DAY_MS = 86_400_000;
