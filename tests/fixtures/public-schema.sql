@@ -387,3 +387,152 @@ create table public.ig_posts (
   "crisis_keywords" text[],
   "enriched_at" timestamp with time zone
 );
+create table public.ig_accounts (
+  "id" uuid not null default gen_random_uuid() primary key,
+  "brand_id" uuid,
+  "handle" text not null,
+  "region" text default 'USA',
+  "country_code" text default 'US',
+  "is_primary" boolean default true,
+  "is_active" boolean default true,
+  "added_at" timestamp with time zone default now()
+);
+create table public.ig_profiles_weekly (
+  "id" uuid not null default gen_random_uuid() primary key,
+  "account_id" uuid,
+  "brand_id" uuid,
+  "region" text default 'USA',
+  "handle" text,
+  "followers" integer,
+  "following" integer,
+  "post_count" integer,
+  "bio_text" text,
+  "bio_link" text,
+  "is_verified" boolean default false,
+  "week_number" integer,
+  "year" integer,
+  "scraped_at" timestamp with time zone default now(),
+  "dominant_content_theme" text
+);
+create table public.yt_channels (
+  "id" uuid not null default gen_random_uuid() primary key,
+  "brand_id" uuid,
+  "channel_id" text,
+  "channel_name" text,
+  "channel_url" text,
+  "region" text default 'USA',
+  "country_code" text default 'US',
+  "is_primary" boolean default true,
+  "is_active" boolean default true,
+  "added_at" timestamp with time zone default now()
+);
+create table public.yt_channel_weekly (
+  "id" uuid not null default gen_random_uuid() primary key,
+  "channel_id" uuid,
+  "brand_id" uuid,
+  "subscribers" integer,
+  "total_views" bigint,
+  "total_videos" integer,
+  "videos_uploaded_this_week" integer default 0,
+  "avg_views_last_10_videos" integer,
+  "week_number" integer,
+  "year" integer,
+  "scraped_at" timestamp with time zone default now()
+);
+create table public.yt_video_analysis (
+  "id" uuid not null default gen_random_uuid() primary key,
+  "video_id" uuid not null,
+  "youtube_video_id" text not null,
+  "brand_id" uuid,
+  "transcript_id" uuid,
+  "summary" text,
+  "performance_thesis" text,
+  "performance_signals" text[],
+  "content_type" text,
+  "is_paid_promo" boolean default false,
+  "sentiment_label" text,
+  "sentiment_score" numeric,
+  "products_mentioned" text[],
+  "products_matched_ids" uuid[],
+  "brands_mentioned" text[],
+  "players_mentioned" text[],
+  "topics" text[],
+  "is_crisis" boolean default false,
+  "is_opportunity" boolean default false,
+  "crisis_keywords" text[],
+  "view_count_at_analysis" bigint,
+  "like_count_at_analysis" integer,
+  "comment_count_at_analysis" integer,
+  "model" text,
+  "enriched_at" timestamp with time zone default now(),
+  "created_at" timestamp with time zone default now()
+);
+create table public.x_accounts (
+  "id" uuid not null default gen_random_uuid() primary key,
+  "brand_id" uuid,
+  "handle" text not null,
+  "profile_url" text,
+  "created_at" timestamp with time zone default now()
+);
+create table public.x_profiles_weekly (
+  "id" uuid not null default gen_random_uuid() primary key,
+  "account_id" uuid,
+  "brand_id" uuid,
+  "handle" text,
+  "followers" integer,
+  "following" integer,
+  "tweet_count" integer,
+  "is_verified" boolean default false,
+  "week_number" integer,
+  "year" integer,
+  "scraped_at" timestamp with time zone default now()
+);
+create table public.tiktok_accounts (
+  "id" uuid not null default gen_random_uuid() primary key,
+  "brand_id" uuid,
+  "handle" text not null,
+  "profile_url" text,
+  "created_at" timestamp with time zone default now()
+);
+create table public.tiktok_profiles_weekly (
+  "id" uuid not null default gen_random_uuid() primary key,
+  "account_id" uuid,
+  "brand_id" uuid,
+  "handle" text,
+  "followers" integer,
+  "following" integer,
+  "video_count" integer,
+  "total_hearts" bigint,
+  "is_verified" boolean default false,
+  "week_number" integer,
+  "year" integer,
+  "scraped_at" timestamp with time zone default now()
+);
+create table public.products_catalog (
+  "id" uuid not null default gen_random_uuid() primary key,
+  "brand_id" uuid,
+  "sku" text not null,
+  "display_name" text,
+  "aliases" text[],
+  "category" text,
+  "is_active" boolean default true,
+  "launched_at" date,
+  "created_at" timestamp with time zone default now(),
+  "image_url" text
+);
+create table public.influencers (
+  "id" uuid not null default gen_random_uuid() primary key,
+  "brand_id" uuid,
+  "name" text not null,
+  "type" text,
+  "instagram_handle" text,
+  "youtube_channel_url" text,
+  "tiktok_handle" text,
+  "follower_count_ig" integer,
+  "follower_count_yt" integer,
+  "country_code" text default 'US',
+  "contract_type" text,
+  "is_active" boolean default true,
+  "added_at" timestamp with time zone default now(),
+  "x_handle" text
+);

@@ -23,6 +23,8 @@ Live at https://customer-response-intel.vercel.app (Vercel, auto-deploys on push
 - **Read-only.** Never INSERT/UPDATE/DELETE/TRUNCATE/DROP in existing tables. New database objects only as files in
   `supabase/sql/`, shown to the owner and applied by the owner after approval.
 - **No customer PII in any output**: no usernames, handles, display names, profile URLs, commenter IDs or emails.
+  Two owner-approved exceptions (D34): the brands' own account handle/profile link (`account_handle`, `account_url`)
+  and sponsored pro athletes' names (`athlete_mentions`). Athletes' personal handles are never returned.
 - **Never invent column names**; check `docs/SCHEMA.md`.
 - Ask before anything irreversible (applying SQL, deploys, changing Vercel/Supabase settings, rotating secrets).
 

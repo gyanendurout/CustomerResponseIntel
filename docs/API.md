@@ -232,3 +232,119 @@ _No parameters beyond the common filters._
 ```bash
 curl -H "x-api-key: $API_KEY" "https://<your-deployment>/api/v1/replies"
 ```
+
+## `GET /api/v1/audience` — Audience growth
+
+Followers (YouTube: subscribers) of each brand's OWN account on Instagram, YouTube, X and TikTok, from weekly snapshots: latest value, change vs the previous week, change over the date range, plus following, content count, TikTok lifetime hearts, YouTube lifetime views and the Instagram dominant content theme. Also returns the brand account handle and profile link. Missing weeks and scrape glitches (0 followers or a >50% one-week drop) are flagged and excluded from changes, never interpolated. no_data lists brand/platform pairs with no snapshots in range. Use for "who is growing fastest / how many followers"; use content_performance for post engagement. Output: data = {accounts:[{platform, brand, account_handle, account_url, latest_week, followers, change_vs_previous_week, change_vs_previous_week_pct, change_in_range, change_in_range_pct, ...}], series:[{platform, brand, week, followers, flag}], no_data:[...]}. Example: "Which brand gained the most Instagram followers this quarter?"
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `platforms` | list of instagram \| youtube \| x \| tiktok | no | Platforms: instagram, youtube, x, tiktok. Default: all four. |
+
+**Example** (Follower growth for all brands on every platform):
+
+```bash
+curl -H "x-api-key: $API_KEY" "https://<your-deployment>/api/v1/audience"
+```
+
+## `GET /api/v1/content` — Content performance
+
+How each brand's OWN posts and videos perform on Instagram, YouTube, X and TikTok in the date range: number of posts, posts per week, average views / likes / comments / shares / reposts / interactions, engagement rate by views and by followers, and a per-format breakdown (Instagram reel/carousel/image, YouTube short/long_form) with the best format (needs 3+ posts). Covers ALL posts in the range, not a top-N sample. Use for "whose content gets the most engagement / which format works"; use top_content for individual posts, audience_growth for followers, posting_cadence for how often brands post. Output: data = [{platform, brand, account_handle, posts, posts_per_week, avg_views, avg_interactions, engagement_rate_by_views, engagement_rate_by_followers, followers, best_format, formats:[{format, posts, avg_views, avg_interactions}]}]. Example: "Which brand has the best Instagram engagement rate, and do reels beat carousels?"
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `platforms` | list of instagram \| youtube \| x \| tiktok | no | Platforms: instagram, youtube, x, tiktok. Default: all four. |
+
+**Example** (Engagement by brand on every platform, last 90 days):
+
+```bash
+curl -H "x-api-key: $API_KEY" "https://<your-deployment>/api/v1/content"
+```
+
+## `GET /api/v1/top-content` — Top content
+
+The best-performing posts and videos from the brands' OWN accounts (Instagram, YouTube, X, TikTok) published in the date range, ranked by interactions (default), views, likes, comments, shares, engagement_rate (interactions/views) or recent. The ranking is computed within the range, over all posts. Returns caption (masked), content link, format and every metric. Filter by platforms, brands and formats (reel, carousel, image, short, long_form, post, video). Use for "show me the top posts / most viewed videos"; use content_performance for averages per brand. Output: data.items = [{platform, brand, account_handle, format, posted_at, caption, url, views, likes, comments, shares, reposts, interactions, engagement_rate_by_views}]. Example: "What were Selkirk's most-viewed YouTube Shorts last month?"
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `platforms` | list of instagram \| youtube \| x \| tiktok | no | Platforms: instagram, youtube, x, tiktok. Default: all four. |
+| `formats` | list of reel \| carousel \| image \| short \| long_form \| post \| video \| unknown | no | Content formats to include. Default: all. |
+| `sort_by` | interactions \| views \| likes \| comments \| shares \| engagement_rate \| recent | no | Ranking. Default interactions. |
+| `limit` | integer ≥1, ≤50 | no | Number of items. Default 10. |
+
+**Example** (Top 10 brand posts by interactions across all platforms):
+
+```bash
+curl -H "x-api-key: $API_KEY" "https://<your-deployment>/api/v1/top-content"
+```
+
+## `GET /api/v1/posting-cadence` — Posting cadence
+
+How often each brand posts on its OWN Instagram, YouTube, X and TikTok accounts: posts per period (zero-filled, weekly by default), posts by weekday (UTC), active days, posts per week, busiest weekday, and the last vs previous period. Brands with a tracked account but no posts in the range appear with 0 (silent), not missing. Use for "who posts most / is JOOLA posting less"; use content_performance for engagement. Output: data = {summary:[{platform, brand, posts, active_days, days_in_range, posts_per_week, busiest_weekday, last_period_posts, previous_period_posts}], series:[{platform, brand, period, posts}], by_weekday:[{platform, brand, weekday, posts}]}. Example: "How often did each brand post on Instagram over the last 4 weeks?"
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `platforms` | list of instagram \| youtube \| x \| tiktok | no | Platforms: instagram, youtube, x, tiktok. Default: all four. |
+
+**Example** (Weekly posting cadence on Instagram, last 28 days):
+
+```bash
+curl -H "x-api-key: $API_KEY" "https://<your-deployment>/api/v1/posting-cadence?platforms=instagram&from=2026-09-01&to=2026-09-28"
+```
+
+## `GET /api/v1/youtube-insights` — YouTube video insights
+
+YouTube content strategy for the brands' OWN channels in the date range: Shorts vs long-form (videos, average views and interactions), content-type mix from the AI video analysis (tutorial, review, highlight, unboxing, comparison, …) with average views and paid-promo counts, analysis coverage per brand, and the top analysed videos with the AI "performance thesis" (why it worked), signals and products shown. Only some videos are analysed (see coverage). Use for "what kind of YouTube content works for competitors"; use top_content for raw top videos. Output: data = {formats:[...], content_types:[...], coverage:[{brand, videos, analysed}], top_videos:[{brand, title, url, content_type, views, performance_thesis, performance_signals, products}]}. Example: "Why are Selkirk's YouTube videos getting more views than JOOLA's?"
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `top_n` | integer ≥1, ≤25 | no | Top analysed videos to return. Default 5. |
+
+**Example** (What YouTube content works for each brand?):
+
+```bash
+curl -H "x-api-key: $API_KEY" "https://<your-deployment>/api/v1/youtube-insights"
+```
+
+## `GET /api/v1/reddit-insights` — Reddit insights
+
+Reddit-specific views that mention counts do not give: which subreddits the brands are discussed in (posts per subreddit, per brand, and JOOLA's share), viral posts ranked by upvote velocity (upvotes per hour), and the most discussed posts by captured replies. Removed posts are excluded. Brand attribution matches the other tools. Use for "where on Reddit are people talking about X / what is blowing up"; use volume_over_time or sentiment_breakdown with channels=["reddit"] for counts and sentiment. Output: data = {subreddits:[{subreddit, posts, joola_posts, joola_share_pct, brands:[{brand, posts}]}], viral:[post], most_discussed:[post]} where post = {brands, subreddit, title, url, posted_at, upvotes, velocity_per_hour, captured_comments, sentiment_5}. Example: "Which subreddits talk about JOOLA most, and what Reddit posts are going viral?"
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `top_n` | integer ≥1, ≤50 | no | Posts per list. Default 10. |
+
+**Example** (Where on Reddit are the brands discussed, and what is going viral?):
+
+```bash
+curl -H "x-api-key: $API_KEY" "https://<your-deployment>/api/v1/reddit-insights"
+```
+
+## `GET /api/v1/product-mentions` — Product mentions
+
+Which paddles (catalogue products) people mention, across Instagram, YouTube, Reddit, TikTok, X comments and posts and product reviews: mentions per product with positive / neutral / negative counts, negative % (of labelled) and a channel split. brands filters by the brand that MAKES the product; products filters by product name (case-insensitive). Each source item counts once per product. Use for "which JOOLA paddles get talked about / which paddle has the most negative buzz"; use top_complaints for complaint themes and search_posts to read the items. Output: data = [{product, brand, mentions, positive, neutral, negative, unlabelled, negative_pct, channels:[{channel, mentions}]}]. Example: "Which JOOLA paddles are mentioned most this quarter, and with what sentiment?"
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `products` | list of string | no | Product names, e.g. ["Perseus"]. Default: all. |
+| `top_n` | integer ≥1, ≤100 | no | Products to return. Default 20. |
+
+**Example** (Most-mentioned paddles in the last 90 days):
+
+```bash
+curl -H "x-api-key: $API_KEY" "https://<your-deployment>/api/v1/product-mentions"
+```
+
+## `GET /api/v1/athlete-mentions` — Athlete mentions
+
+Mentions of sponsored pro athletes (the brands' athlete roster) in comments and posts: per athlete, the sponsoring brand, contract type, mentions, positive / neutral / negative counts, negative % and a channel split. brands filters by the SPONSORING brand. Only roster athletes are named; personal social handles are never returned. Use for "how much do people talk about JOOLA's athletes vs competitors' / which athlete's mentions skew negative". Output: data = [{athlete, sponsor_brand, contract_type, is_active, mentions, positive, neutral, negative, unlabelled, negative_pct, channels}]. Example: "Which sponsored athletes get the most mentions on Instagram?"
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `top_n` | integer ≥1, ≤100 | no | Athletes to return. Default 20. |
+
+**Example** (Most-mentioned sponsored athletes, last 90 days):
+
+```bash
+curl -H "x-api-key: $API_KEY" "https://<your-deployment>/api/v1/athlete-mentions"
+```

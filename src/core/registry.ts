@@ -16,6 +16,14 @@ import { compareBrands } from './capabilities/compare';
 import { metrics } from './capabilities/metrics';
 import { dataHealth } from './capabilities/data-health';
 import { brandReplies } from './capabilities/replies';
+import { audienceGrowth } from './capabilities/audience';
+import { contentPerformance } from './capabilities/content';
+import { topContent } from './capabilities/top-content';
+import { postingCadence } from './capabilities/cadence';
+import { videoInsights } from './capabilities/video-insights';
+import { redditInsights } from './capabilities/reddit-insights';
+import { productMentions } from './capabilities/product-mentions';
+import { athleteMentions } from './capabilities/athlete-mentions';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyCapability = Capability<any, any>;
@@ -23,6 +31,7 @@ type AnyCapability = Capability<any, any>;
 export const CAPABILITIES: readonly AnyCapability[] = [
   listBrands, channelOverview, volumeOverTime, shareOfVoice, sentimentBreakdown, topComplaints, searchPosts,
   crisisMonitor, detectSpikes, brandSwitching, topicTrends, compareBrands, metrics, dataHealth, brandReplies,
+  audienceGrowth, contentPerformance, topContent, postingCadence, videoInsights, redditInsights, productMentions, athleteMentions,
 ];
 
 const byRoute = new Map(CAPABILITIES.map(c => [c.route, c]));

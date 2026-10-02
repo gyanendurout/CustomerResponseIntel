@@ -28,7 +28,10 @@ describe('adapter contract', () => {
   it('no intel view exposes a user-identifying column', async () => {
     const { rows } = await pg.query<{ table_name: string; column_name: string }>(
       `select table_name, column_name from information_schema.columns where table_schema = 'intel'`);
-    const bad = rows.filter(r => FORBIDDEN.test(r.column_name));
+    // Owner decision 2026-10-02: the brands' OWN account handles may be returned (company accounts, not people).
+    // This is the only exception, and only in this view.
+    const ALLOWED = new Set(['v_brand_accounts.account_handle']);
+    const bad = rows.filter(r => FORBIDDEN.test(r.column_name) && !ALLOWED.has(`${r.table_name}.${r.column_name}`));
     expect(bad).toEqual([]);
   });
 });
