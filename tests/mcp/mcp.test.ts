@@ -68,7 +68,7 @@ describe('MCP tools', () => {
     await client.close();
   });
 
-  it('every tool returns structuredContent + a text summary, under 25 KB, with no PII', async () => {
+  it('every tool returns structuredContent + a summary + the full result as JSON text, under 25 KB, with no PII', async () => {
     const client = await connect(TOKEN);
     for (const cap of CAPABILITIES) {
       const args = cap.examples[0]!.input as Record<string, unknown>;
@@ -76,10 +76,13 @@ describe('MCP tools', () => {
       expect(res.isError, `${cap.name}: ${JSON.stringify(res.content)}`).toBeFalsy();
       const structured = res.structuredContent as { data: unknown; meta: { notes: string[] } };
       expect(() => cap.output.parse(structured.data), cap.name).not.toThrow();
-      const text = (res.content as Array<{ type: string; text: string }>)[0]!;
-      expect(text.type).toBe('text');
-      expect(text.text.length).toBeGreaterThan(0);
-      expect(Buffer.byteLength(JSON.stringify(res))).toBeLessThan(25_000);
+      const [summary, full] = res.content as Array<{ type: string; text: string }>;
+      expect(summary!.type).toBe('text');
+      expect(summary!.text.length).toBeGreaterThan(0);
+      // Clients that read only `content` (the Claude apps) still get every field, identical to structuredContent.
+      expect(full!.type).toBe('text');
+      expect(JSON.parse(full!.text), cap.name).toEqual(structured);
+      expect(Buffer.byteLength(full!.text)).toBeLessThan(25_000);
       expect(scanForPii(res), cap.name).toEqual([]);
     }
     await client.close();

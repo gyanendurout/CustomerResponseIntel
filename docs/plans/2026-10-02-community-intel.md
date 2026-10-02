@@ -74,6 +74,7 @@ Status: sections 1–3 were approved interactively on 2026-10-02. The owner appr
 | D28 | No materialized view: tools query live views (DB time 0–3.1 s per tool on real data; new rows visible instantly). Example/search queries rank on cheap columns, then mask text for the winners only (`fetchItems`) | Materialized `v_signals` refreshed every 15 min by pg_cron (< 1 s per tool, up to 15 min lag) | Owner choice (A): mainly used from Claude, where a few seconds is fine. Revisit if a dashboard needs sub-second responses. |
 | D29 | **Supersedes D25.** `DATABASE_CA_CERT` is optional: with it TLS is verified, without it the connection is encrypted but unverified (no startup error) | Require the CA in production | Owner choice: simpler deploy. Verification can be switched on later by adding the variable. |
 | D30 | MCP also accepts the token as the last URL segment (`/api/mcp/<token>`), checked against the same `MCP_TOKENS` hashes | Bring back OAuth | The Claude app's "Add custom connector" dialog takes only a URL. Trade-off: a URL token appears in Vercel request logs. |
+| D31 | MCP tool results also include the full `{data, meta}` as a JSON text block, next to the summary and `structuredContent` | Summary text only | The Claude apps pass only `content` to the model, so comment text and links never reached Claude. The MCP spec recommends this for structured results. |
 
 ## 4. Design
 

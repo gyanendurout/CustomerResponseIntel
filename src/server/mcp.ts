@@ -1,5 +1,6 @@
 // MCP server: every registry capability becomes a read-only tool. Tools call core functions directly (no HTTP hop).
-// Results carry structuredContent ({data, meta}) plus a short text summary, kept under ~25 KB.
+// Results carry structuredContent ({data, meta}), a short text summary, and the same {data, meta} as JSON text
+// (for clients that read only `content`), kept under ~25 KB.
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/server';
 import { createCtx } from '@/core/context';
@@ -49,8 +50,13 @@ export function registerTools(server: McpServer): void {
           const input = cap.input.parse(args ?? {});
           const result = fitToBudget(await cap.run(input, createCtx()));
           log('info', 'mcp_ok', { tool: cap.name, ms: Date.now() - started, rows: result.meta.rows_counted });
+          // Many clients (including the Claude apps) pass only `content` to the model, so the full result is also
+          // sent as JSON text, as the MCP spec recommends for structured results. fitToBudget keeps it ~25 KB.
           return {
-            content: [{ type: 'text' as const, text: summaryText(cap.summarise(result), result.meta.notes) }],
+            content: [
+              { type: 'text' as const, text: summaryText(cap.summarise(result), result.meta.notes) },
+              { type: 'text' as const, text: JSON.stringify(result) },
+            ],
             structuredContent: result as unknown as Record<string, unknown>,
           };
         } catch (err) {
