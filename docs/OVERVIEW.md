@@ -1,12 +1,13 @@
 # Community Intel: plain-language overview and handoff
 
-Status on 2026-10-02 (updated):
-- The build is complete. 203 tests pass, and the typecheck and production build succeed.
+Status on 2026-10-02 (updated). Secrets and exact connection details are in `PRIVATE_NOTES.md` (local only).
+
+- The build is complete. 205 tests pass, and the typecheck and production build succeed.
 - The SQL views and the read-only login are applied in Supabase. Checked against the real data: the login is
   read-only, all 17 views exist, totals match an independent recount (51,762 items, 53,323 signals), and all 15 tools
   work with no usernames, handles or emails in their output.
 - Speed (decision D28): 0–3.1 s of database time per tool. No pre-built copy, so new data shows up instantly.
-- Not deployed yet.
+- Deployed: https://customer-response-intel.vercel.app. All 15 REST routes and MCP tools checked live; no PII found.
 
 ---
 
@@ -135,7 +136,8 @@ needs `DATABASE_URL`.
 Done: service key rotated, migrations applied, `DATABASE_URL` set, real-data checks passing, keys made, code on
 GitHub (gyanendurout/CustomerResponseIntel, public), deployed to https://customer-response-intel.vercel.app.
 
-1. **Connect Claude Code or Claude Desktop** with the token `CLAUDE_MCP_TOKEN` from `.env` (`docs/CONNECT_CLAUDE.md`).
+1. **Connect Claude.** In the Claude app or claude.ai, use Add custom connector with the private connector URL
+   (`/api/mcp/<token>`, in `PRIVATE_NOTES.md`). Claude Code and Desktop can use the header instead (`docs/CONNECT_CLAUDE.md`).
 2. **Optional: verify the database certificate.** Add `DATABASE_CA_CERT` (from `.env`) in Vercel and redeploy.
 3. **TikTok link format:** on hold (currently the `tiktok.com/embed/v2/<id>` form).
 4. **Optional Supabase settings:** turn on "Enforce SSL"; turn off "Automatically expose new tables".

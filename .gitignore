@@ -8,3 +8,4 @@ coverage/
 scripts/out/
 tsconfig.tsbuildinfo
 graphify-out/
+PRIVATE_NOTES.md
